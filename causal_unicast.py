@@ -21,7 +21,7 @@ class CausalCommunication:
         if id != self.id:
             self.vector_clock.addClock(self.id)
             deps = self.vector_clock.getClock()
-            message = f"{deps}::{self.id}::{message}::{self.group}"
+            message = f"{deps}::{self.id}::{message}::{self.group}%unicast"
             print(
                 f"\033[92mProcess {self.id}:\033[0m Sending message {message} to \033[93mprocess {id}\033[0m\n"
             )
@@ -35,9 +35,23 @@ class CausalCommunication:
             s.sendall(message.encode("utf-8"))
 
     def receive_message(self, conn, addr):
-        m = conn.recv(1024).decode("utf-8")
-        print(f"\033[92mProcess {self.id}:\033[0m Message {m} received.\n")
-        self.receive(m)
+        message = conn.recv(1024).decode("utf-8")
+        print(f"\033[92mProcess {self.id}:\033[0m Message {message} received.\n")
+        message = message.split("%")
+        if message[1] == "unicast":
+            self.receive(message[0])
+        elif message[1] == "broadcast":
+            self.deliver(message[0])
+        elif message[1] == "commit":
+            self.commit(message[0])
+        else:
+            raise Exception("Invalid message type")
+
+    def deliver(self, message):
+        pass
+
+    def commit(self, message):
+        pass
 
     def receive(self, message):
         time.sleep(random.uniform(0, 2))

@@ -13,7 +13,7 @@ def create_process_list(n):
 
     replicas_list = []
     for i in range(int(n / 2)):
-        replicas_list.append(Replica(i, peers, replicas_ids))
+        replicas_list.append(Replica(i, peers, replicas_ids, leader_id=0))
 
     client_list = []
     for i in range(int(n / 2), n):
@@ -24,7 +24,7 @@ def create_process_list(n):
 
 def test_program():
     number_of_processes = 6
-    number_of_messages = 10
+    number_of_messages = 3
     replica_list, client_list = create_process_list(number_of_processes)
 
     threads = []
@@ -48,10 +48,21 @@ def test_program():
         "I'll be back.",
     ]
 
+    print("=" * 50)
+    print("\nTesting causal order unicast\n")
     for _ in range(number_of_messages):
         client = random.choice(client_list)
         message = random.choice(messages)
         client.request_write(f"\033[95m{message}\033[0m")
+
+    time.sleep(5)
+
+    print("=" * 50)
+    print("\nTesting total order broadcast")
+    for _ in range(number_of_messages):
+        client = random.choice(client_list)
+        message = random.choice(messages)
+        client.brodcast_request_write(f"\033[95m{message}\033[0m")
 
     for t in threads:
         t.join()
